@@ -23,30 +23,35 @@ const NEXT_LABEL = {
 export default function Dashboard() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(false);
   const prevPendingCount = useRef(null);
+  const audioCtxRef = useRef(null);
+
+  function enableSound() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtxRef.current = ctx;
+    setSoundEnabled(true);
+  }
 
   function playNotificationSound() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const playBeep = (delay) => {
-        setTimeout(() => {
-          const oscillator = ctx.createOscillator();
-          const gain = ctx.createGain();
-          oscillator.connect(gain);
-          gain.connect(ctx.destination);
-          oscillator.type = 'sine';
-          oscillator.frequency.value = 880;
-          gain.gain.setValueAtTime(0.3, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.3);
-        }, delay);
-      };
-      playBeep(0);
-      playBeep(350);
-    } catch (err) {
-      console.error('Sound error:', err);
-    }
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+    const playBeep = (delay) => {
+      setTimeout(() => {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 880;
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.3);
+      }, delay);
+    };
+    playBeep(0);
+    playBeep(350);
   }
 
   async function loadOrders() {
@@ -100,6 +105,16 @@ export default function Dashboard() {
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-6">
+      {!soundEnabled && (
+        <div className="max-w-6xl mx-auto mb-4">
+          <button
+            onClick={enableSound}
+            className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold"
+          >
+            🔔 تفعيل التنبيهات الصوتية
+          </button>
+        </div>
+      )}
       <h1 className="text-2xl font-extrabold text-[var(--accent-soft)] mb-6 text-center">
         لوحة تحكم مرايا
       </h1>
