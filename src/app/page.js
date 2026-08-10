@@ -21,7 +21,7 @@ export default function Home() {
     const saved = localStorage.getItem('maraya_customer');
     if (saved) setCustomer(JSON.parse(saved));
 
-    fetch('http://localhost:3000/api/menu')
+    fetch('https://maraya-backend.onrender.com/api/menu')
       .then((res) => res.json())
       .then((data) => {
         setMenu(data);
@@ -78,7 +78,7 @@ export default function Home() {
   async function submitOrder() {
     setSubmitting(true);
     try {
-      const res = await fetch('http://localhost:3000/api/orders', {
+      const res = await fetch('https://maraya-backend.onrender.com/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -96,7 +96,7 @@ export default function Home() {
 
       // إنشاء فاتورة الدفع وتحويل العميل لصفحة الدفع
       const payRes = await fetch(
-        `http://localhost:3000/api/orders/${data.order_id}/create-payment`,
+        `https://maraya-backend.onrender.com/api/orders/${data.order_id}/create-payment`,
         { method: 'POST' }
       );
       const payData = await payRes.json();

@@ -17,7 +17,7 @@ export default function PaymentResult() {
       return;
     }
 
-    fetch(`http://localhost:3000/api/orders/${order_id}/confirm-payment`, {
+    fetch(`https://maraya-backend.onrender.com/api/orders/${order_id}/confirm-payment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ payment_id }),

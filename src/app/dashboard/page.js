@@ -26,7 +26,7 @@ export default function Dashboard() {
 
   async function loadOrders() {
     try {
-      const res = await fetch('http://localhost:3000/api/dashboard/orders');
+      const res = await fetch('https://maraya-backend.onrender.com/api/dashboard/orders');
       const data = await res.json();
       setOrders(data.orders || []);
     } catch (err) {
@@ -45,7 +45,7 @@ export default function Dashboard() {
   async function updateStatus(orderId, newStatus) {
     setOrders((prev) => prev.filter((o) => (newStatus === 'completed' ? o.id !== orderId : true)));
     try {
-      await fetch(`http://localhost:3000/api/orders/${orderId}/status`, {
+      await fetch(`https://maraya-backend.onrender.com/api/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
