@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 const STATUS_LABELS = {
   pending: 'جديد',
@@ -23,12 +23,44 @@ const NEXT_LABEL = {
 export default function Dashboard() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const prevPendingCount = useRef(null);
+
+  function playNotificationSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const playBeep = (delay) => {
+        setTimeout(() => {
+          const oscillator = ctx.createOscillator();
+          const gain = ctx.createGain();
+          oscillator.connect(gain);
+          gain.connect(ctx.destination);
+          oscillator.type = 'sine';
+          oscillator.frequency.value = 880;
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+          oscillator.start(ctx.currentTime);
+          oscillator.stop(ctx.currentTime + 0.3);
+        }, delay);
+      };
+      playBeep(0);
+      playBeep(350);
+    } catch (err) {
+      console.error('Sound error:', err);
+    }
+  }
 
   async function loadOrders() {
     try {
       const res = await fetch('https://maraya-backend.onrender.com/api/dashboard/orders');
       const data = await res.json();
-      setOrders(data.orders || []);
+      const newOrders = data.orders || [];
+      const pendingCount = newOrders.filter((o) => o.status === 'pending').length;
+
+      if (prevPendingCount.current !== null && pendingCount > prevPendingCount.current) {
+        playNotificationSound();
+      }
+      prevPendingCount.current = pendingCount;
+      setOrders(newOrders);
     } catch (err) {
       console.error(err);
     } finally {
