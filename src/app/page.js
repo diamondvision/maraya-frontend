@@ -2,6 +2,27 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+const OFFERS_CONFIG = [
+  {
+    matchName: 'لاتيه',
+    subtitle: 'قهوة مختصة مميزة',
+    gradient: 'linear-gradient(135deg, #c17f3d, #8a5a2a)',
+    emoji: '☕',
+  },
+  {
+    matchName: 'آيس لاتيه',
+    subtitle: 'انتعش مع مرايا',
+    gradient: 'linear-gradient(135deg, #6b4226, #3a2313)',
+    emoji: '🧊',
+  },
+  {
+    matchName: 'كيكة مراية',
+    subtitle: 'حلاوة تستاهل تجربها',
+    gradient: 'linear-gradient(135deg, #8a5a2a, #c17f3d)',
+    emoji: '🍰',
+  },
+];
+
 export default function Home() {
   const [menu, setMenu] = useState({ categories: [], products: [] });
   const [loading, setLoading] = useState(true);
@@ -16,6 +37,15 @@ export default function Home() {
   const [formTable, setFormTable] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
+
+  const [currentOffer, setCurrentOffer] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentOffer((prev) => (prev + 1) % OFFERS_CONFIG.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem('maraya_customer');
@@ -94,7 +124,6 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'حصل خطأ');
 
-      // إنشاء فاتورة الدفع وتحويل العميل لصفحة الدفع
       const payRes = await fetch(
         `https://maraya-backend.onrender.com/api/orders/${data.order_id}/create-payment`,
         { method: 'POST' }
@@ -114,7 +143,16 @@ export default function Home() {
     [menu.products, activeCategory]
   );
 
-  // شاشة التسجيل
+  // ربط كل عرض في البانر بمنتج حقيقي من المنيو (بالاسم)
+  const offers = useMemo(
+    () =>
+      OFFERS_CONFIG.map((cfg) => {
+        const product = menu.products.find((p) => p.name === cfg.matchName);
+        return { ...cfg, product };
+      }),
+    [menu.products]
+  );
+
   if (!customer) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] px-5">
@@ -180,6 +218,10 @@ export default function Home() {
     );
   }
 
+  const activeOfferData = offers[currentOffer];
+  const offerProduct = activeOfferData?.product;
+  const offerInCart = offerProduct ? cart[offerProduct.id] : null;
+
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)] pb-32">
       <header className="sticky top-0 z-20 bg-[var(--bg)] border-b border-[var(--border)]">
@@ -190,6 +232,70 @@ export default function Home() {
           <p className="text-sm text-[var(--text-muted)] mt-1">
             أهلاً {customer.name} {customer.table ? `— طاولة ${customer.table}` : ''}
           </p>
+        </div>
+
+        <div className="max-w-3xl mx-auto px-5 pb-4">
+          <div
+            className="relative w-full rounded-2xl overflow-hidden flex items-center justify-between px-5 py-4 gap-3 transition-all duration-700"
+            style={{ background: activeOfferData.gradient }}
+          >
+            <div className="flex-1">
+              <p className="text-[#1c1815] font-extrabold text-base">
+                {activeOfferData.matchName}
+              </p>
+              <p className="text-[#1c1815]/80 text-xs mt-1">{activeOfferData.subtitle}</p>
+              {offerProduct && (
+                <p className="text-[#1c1815] font-bold text-sm mt-1">
+                  {offerProduct.base_price} ريال
+                </p>
+              )}
+            </div>
+
+            <span className="text-3xl shrink-0">{activeOfferData.emoji}</span>
+
+            {offerProduct && (
+              <div className="shrink-0">
+                {offerInCart ? (
+                  <div className="flex items-center gap-2 bg-[#1c1815]/20 rounded-full px-2 py-1">
+                    <button
+                      onClick={() => changeQty(offerProduct.id, -1)}
+                      className="w-7 h-7 rounded-full bg-[#1c1815] text-[var(--accent-soft)] flex items-center justify-center"
+                    >
+                      −
+                    </button>
+                    <span className="text-[#1c1815] font-bold text-sm w-4 text-center">
+                      {offerInCart.qty}
+                    </span>
+                    <button
+                      onClick={() => changeQty(offerProduct.id, 1)}
+                      className="w-7 h-7 rounded-full bg-[#1c1815] text-[var(--accent-soft)] flex items-center justify-center"
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => addToCart(offerProduct)}
+                    className="px-3 py-2 rounded-full bg-[#1c1815] text-[var(--accent-soft)] text-xs font-bold whitespace-nowrap"
+                  >
+                    إضافة للسلة
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {offers.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentOffer(i)}
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${
+                    i === currentOffer ? 'bg-[#1c1815] w-4' : 'bg-[#1c1815]/40'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="max-w-3xl mx-auto px-5 pb-4 flex gap-2 overflow-x-auto no-scrollbar">
