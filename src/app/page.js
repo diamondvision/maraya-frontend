@@ -6,19 +6,19 @@ const OFFERS_CONFIG = [
   {
     matchName: 'لاتيه',
     subtitle: 'قهوة مختصة مميزة',
-    gradient: 'linear-gradient(135deg, #c17f3d, #8a5a2a)',
+    gradient: 'linear-gradient(135deg, #ff9a56, #d94f04)',
     emoji: '☕',
   },
   {
     matchName: 'آيس لاتيه',
     subtitle: 'انتعش مع مرايا',
-    gradient: 'linear-gradient(135deg, #6b4226, #3a2313)',
+    gradient: 'linear-gradient(135deg, #4facfe, #00c6ae)',
     emoji: '🧊',
   },
   {
     matchName: 'كيكة مراية',
     subtitle: 'حلاوة تستاهل تجربها',
-    gradient: 'linear-gradient(135deg, #8a5a2a, #c17f3d)',
+    gradient: 'linear-gradient(135deg, #f857a6, #ff5858)',
     emoji: '🍰',
   },
 ];
@@ -143,7 +143,6 @@ export default function Home() {
     [menu.products, activeCategory]
   );
 
-  // ربط كل عرض في البانر بمنتج حقيقي من المنيو (بالاسم)
   const offers = useMemo(
     () =>
       OFFERS_CONFIG.map((cfg) => {
@@ -240,12 +239,17 @@ export default function Home() {
             style={{ background: activeOfferData.gradient }}
           >
             <div className="flex-1">
-              <p className="text-[#1c1815] font-extrabold text-base">
+              <span className="inline-block bg-white/90 text-[#1c1815] text-[10px] font-extrabold px-2 py-0.5 rounded-full mb-1">
+                عرض 🔥
+              </span>
+              <p className="text-white font-extrabold text-base drop-shadow">
                 {activeOfferData.matchName}
               </p>
-              <p className="text-[#1c1815]/80 text-xs mt-1">{activeOfferData.subtitle}</p>
+              <p className="text-white/85 text-xs mt-1 drop-shadow">
+                {activeOfferData.subtitle}
+              </p>
               {offerProduct && (
-                <p className="text-[#1c1815] font-bold text-sm mt-1">
+                <p className="text-white font-bold text-sm mt-1 drop-shadow">
                   {offerProduct.base_price} ريال
                 </p>
               )}
@@ -256,19 +260,19 @@ export default function Home() {
             {offerProduct && (
               <div className="shrink-0">
                 {offerInCart ? (
-                  <div className="flex items-center gap-2 bg-[#1c1815]/20 rounded-full px-2 py-1">
+                  <div className="flex items-center gap-2 bg-black/25 rounded-full px-2 py-1">
                     <button
                       onClick={() => changeQty(offerProduct.id, -1)}
-                      className="w-7 h-7 rounded-full bg-[#1c1815] text-[var(--accent-soft)] flex items-center justify-center"
+                      className="w-7 h-7 rounded-full bg-white text-[#1c1815] flex items-center justify-center font-bold"
                     >
                       −
                     </button>
-                    <span className="text-[#1c1815] font-bold text-sm w-4 text-center">
+                    <span className="text-white font-bold text-sm w-4 text-center">
                       {offerInCart.qty}
                     </span>
                     <button
                       onClick={() => changeQty(offerProduct.id, 1)}
-                      className="w-7 h-7 rounded-full bg-[#1c1815] text-[var(--accent-soft)] flex items-center justify-center"
+                      className="w-7 h-7 rounded-full bg-white text-[#1c1815] flex items-center justify-center font-bold"
                     >
                       +
                     </button>
@@ -276,7 +280,7 @@ export default function Home() {
                 ) : (
                   <button
                     onClick={() => addToCart(offerProduct)}
-                    className="px-3 py-2 rounded-full bg-[#1c1815] text-[var(--accent-soft)] text-xs font-bold whitespace-nowrap"
+                    className="px-3 py-2 rounded-full bg-white text-[#1c1815] text-xs font-bold whitespace-nowrap"
                   >
                     إضافة للسلة
                   </button>
@@ -290,7 +294,7 @@ export default function Home() {
                   key={i}
                   onClick={() => setCurrentOffer(i)}
                   className={`w-1.5 h-1.5 rounded-full transition-all ${
-                    i === currentOffer ? 'bg-[#1c1815] w-4' : 'bg-[#1c1815]/40'
+                    i === currentOffer ? 'bg-white w-4' : 'bg-white/40'
                   }`}
                 />
               ))}
