@@ -219,8 +219,6 @@ export default function Home() {
   }
 
   const activeOfferData = offers[currentOffer];
-  const offerProduct = activeOfferData?.product;
-  const offerInCart = offerProduct ? cart[offerProduct.id] : null;
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)] pb-32">
@@ -236,67 +234,17 @@ export default function Home() {
 
         <div className="max-w-3xl mx-auto px-5 pb-4">
           <div
-            className="relative w-full rounded-2xl overflow-hidden flex items-center justify-between px-5 py-4 gap-3 transition-all duration-700"
+            className="relative w-full h-32 rounded-2xl overflow-hidden transition-all duration-700"
             style={
               activeOfferData.image
                 ? {
-                    backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.15)), url(${activeOfferData.image})`,
+                    backgroundImage: `url(${activeOfferData.image})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }
                 : { background: activeOfferData.gradient }
             }
           >
-            <div className="flex-1">
-              <span className="inline-block bg-white/90 text-[#1c1815] text-[10px] font-extrabold px-2 py-0.5 rounded-full mb-1">
-                عرض 🔥
-              </span>
-              <p className="text-white font-extrabold text-base drop-shadow">
-                {activeOfferData.matchName}
-              </p>
-              <p className="text-white/85 text-xs mt-1 drop-shadow">
-                {activeOfferData.subtitle}
-              </p>
-              {offerProduct && (
-                <p className="text-white font-bold text-sm mt-1 drop-shadow">
-                  {offerProduct.base_price} ريال
-                </p>
-              )}
-            </div>
-
-            <span className="text-3xl shrink-0">{activeOfferData.emoji}</span>
-
-            {offerProduct && (
-              <div className="shrink-0">
-                {offerInCart ? (
-                  <div className="flex items-center gap-2 bg-black/25 rounded-full px-2 py-1">
-                    <button
-                      onClick={() => changeQty(offerProduct.id, -1)}
-                      className="w-7 h-7 rounded-full bg-white text-[#1c1815] flex items-center justify-center font-bold"
-                    >
-                      −
-                    </button>
-                    <span className="text-white font-bold text-sm w-4 text-center">
-                      {offerInCart.qty}
-                    </span>
-                    <button
-                      onClick={() => changeQty(offerProduct.id, 1)}
-                      className="w-7 h-7 rounded-full bg-white text-[#1c1815] flex items-center justify-center font-bold"
-                    >
-                      +
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => addToCart(offerProduct)}
-                    className="px-3 py-2 rounded-full bg-white text-[#1c1815] text-xs font-bold whitespace-nowrap"
-                  >
-                    إضافة للسلة
-                  </button>
-                )}
-              </div>
-            )}
-
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
               {offers.map((_, i) => (
                 <button
