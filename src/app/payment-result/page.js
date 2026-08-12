@@ -111,7 +111,7 @@ export default function PaymentResult() {
 
         
           href="/"
-          className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2"
+          className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2 inline-block"
         >
           العودة للمنيو
         </a>
