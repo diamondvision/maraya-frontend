@@ -24,6 +24,14 @@ const OFFERS_CONFIG = [
   },
 ];
 
+const DRINK_CATEGORY_NAMES = ['مشروبات ساخنة', 'مشروبات باردة'];
+
+function isRiyadhWeekend() {
+  const riyadhNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Riyadh' }));
+  const day = riyadhNow.getDay(); // 0=Sun ... 4=Thu, 5=Fri, 6=Sat
+  return [4, 5, 6].includes(day);
+}
+
 export default function Home() {
   const [menu, setMenu] = useState({ categories: [], products: [] });
   const [loading, setLoading] = useState(true);
@@ -40,6 +48,12 @@ export default function Home() {
   const [submitting, setSubmitting] = useState(false);
 
   const [currentOffer, setCurrentOffer] = useState(0);
+
+  // وضع عرض "اشترِ مشروب واحصل على الآخر مجانًا"
+  const [offerMode, setOfferMode] = useState(false);
+  const [offerSelection, setOfferSelection] = useState([]); // array of product ids
+
+  const weekendOfferActive = isRiyadhWeekend();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -75,10 +89,21 @@ export default function Home() {
 
   const cartItems = Object.values(cart);
   const cartCount = cartItems.reduce((sum, item) => sum + item.qty, 0);
-  const cartTotal = cartItems.reduce(
+  const rawCartTotal = cartItems.reduce(
     (sum, item) => sum + item.qty * Number(item.product.base_price),
     0
   );
+
+  const offerDiscount = useMemo(() => {
+    if (offerSelection.length !== 2) return 0;
+    const [idA, idB] = offerSelection;
+    const prodA = menu.products.find((p) => p.id === idA);
+    const prodB = menu.products.find((p) => p.id === idB);
+    if (!prodA || !prodB) return 0;
+    return Math.min(Number(prodA.base_price), Number(prodB.base_price));
+  }, [offerSelection, menu.products]);
+
+  const cartTotal = rawCartTotal - offerDiscount;
 
   function addToCart(product) {
     setCart((prev) => {
@@ -106,6 +131,49 @@ export default function Home() {
     });
   }
 
+  function startOfferMode() {
+    const firstDrinkCat = menu.categories.find((c) => DRINK_CATEGORY_NAMES.includes(c.name));
+    if (firstDrinkCat) setActiveCategory(firstDrinkCat.id);
+    setOfferMode(true);
+    setOfferSelection([]);
+  }
+
+  function cancelOfferMode() {
+    setOfferMode(false);
+    setOfferSelection((prev) => {
+      prev.forEach((id) => {
+        const product = menu.products.find((p) => p.id === id);
+        if (product) {
+          setCart((c) => {
+            const rest = { ...c };
+            delete rest[id];
+            return rest;
+          });
+        }
+      });
+      return [];
+    });
+  }
+
+  function toggleOfferProduct(product) {
+    setOfferSelection((prev) => {
+      if (prev.includes(product.id)) {
+        const next = prev.filter((id) => id !== product.id);
+        setCart((c) => {
+          const rest = { ...c };
+          delete rest[product.id];
+          return rest;
+        });
+        return next;
+      }
+      if (prev.length >= 2) return prev;
+      const next = [...prev, product.id];
+      setCart((c) => ({ ...c, [product.id]: { product, qty: 1 } }));
+      if (next.length === 2) setOfferMode(false);
+      return next;
+    });
+  }
+
   async function submitOrder() {
     setSubmitting(true);
     try {
@@ -120,6 +188,7 @@ export default function Home() {
             product_id: item.product.id,
             quantity: item.qty,
           })),
+          offer_pair_ids: offerSelection.length === 2 ? offerSelection : null,
         }),
       });
       const data = await res.json();
@@ -234,7 +303,7 @@ export default function Home() {
 
         <div className="max-w-3xl mx-auto px-5 pb-4">
           <div
-            className="relative w-full h-60 rounded-2xl overflow-hidden transition-all duration-700"
+            className="relative w-full h-52 rounded-2xl overflow-hidden transition-all duration-700"
             style={
               activeOfferData.image
                 ? {
@@ -259,6 +328,56 @@ export default function Home() {
           </div>
         </div>
 
+        {weekendOfferActive && !offerMode && offerSelection.length < 2 && (
+          <div className="max-w-3xl mx-auto px-5 pb-4">
+            <button
+              onClick={startOfferMode}
+              className="w-full rounded-2xl px-5 py-3 flex items-center justify-between text-right"
+              style={{ background: 'linear-gradient(135deg, #ffd166, #ef476f)' }}
+            >
+              <div>
+                <p className="text-white font-extrabold text-sm">
+                  عرض نهاية الأسبوع 🎉 اشترِ مشروب واحصل على الآخر مجانًا
+                </p>
+                <p className="text-white/80 text-xs mt-0.5">اضغط هنا لاختيار مشروبَيك</p>
+              </div>
+              <span className="text-2xl">🥤</span>
+            </button>
+          </div>
+        )}
+
+        {offerMode && (
+          <div className="max-w-3xl mx-auto px-5 pb-4">
+            <div className="rounded-2xl px-5 py-3 flex items-center justify-between bg-[var(--surface-2)] border border-[var(--accent)]">
+              <p className="text-sm font-medium">
+                اختر مشروبين ({offerSelection.length}/2) — هتدفع سعر الأعلى بس
+              </p>
+              <button
+                onClick={cancelOfferMode}
+                className="text-xs text-[var(--text-muted)] underline"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        )}
+
+        {offerSelection.length === 2 && (
+          <div className="max-w-3xl mx-auto px-5 pb-4">
+            <div className="rounded-2xl px-5 py-3 flex items-center justify-between bg-[var(--surface-2)] border border-[var(--accent)]">
+              <p className="text-sm font-medium text-[var(--accent-soft)]">
+                🎉 تم اختيار مشروبَي العرض — خصم {offerDiscount} ريال مطبّق
+              </p>
+              <button
+                onClick={cancelOfferMode}
+                className="text-xs text-[var(--text-muted)] underline"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="max-w-3xl mx-auto px-5 pb-4 flex gap-2 overflow-x-auto no-scrollbar">
           {menu.categories.map((cat) => (
             <button
@@ -279,12 +398,18 @@ export default function Home() {
       <section className="max-w-3xl mx-auto px-5 pt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {visibleProducts.map((product) => {
           const inCart = cart[product.id];
+          const isDrinkCategory = DRINK_CATEGORY_NAMES.includes(
+            menu.categories.find((c) => c.id === activeCategory)?.name
+          );
+          const showOfferPicker = offerMode && isDrinkCategory;
+          const isSelectedForOffer = offerSelection.includes(product.id);
+
           return (
             <div
               key={product.id}
               className={`rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-3 transition-transform ${
                 justAdded === product.id ? 'scale-[1.02] border-[var(--accent)]' : ''
-              }`}
+              } ${isSelectedForOffer ? 'border-[var(--accent)]' : ''}`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -300,7 +425,19 @@ export default function Home() {
                 </span>
               </div>
 
-              {inCart ? (
+              {showOfferPicker ? (
+                <button
+                  onClick={() => toggleOfferProduct(product)}
+                  disabled={!isSelectedForOffer && offerSelection.length >= 2}
+                  className={`w-full py-2 rounded-full text-sm font-medium transition-colors ${
+                    isSelectedForOffer
+                      ? 'bg-[var(--accent)] text-[#1c1815]'
+                      : 'border border-[var(--accent)] text-[var(--accent-soft)] hover:bg-[var(--accent)] hover:text-[#1c1815]'
+                  } disabled:opacity-40`}
+                >
+                  {isSelectedForOffer ? '✓ تم الاختيار' : 'اختر للعرض'}
+                </button>
+              ) : inCart ? (
                 <div className="flex items-center justify-between bg-[var(--surface-2)] rounded-full px-2 py-1">
                   <button
                     onClick={() => changeQty(product.id, -1)}
@@ -369,30 +506,45 @@ export default function Home() {
                   className="flex items-center justify-between gap-2 bg-[var(--surface-2)] rounded-xl p-3"
                 >
                   <div>
-                    <p className="font-medium text-sm">{product.name}</p>
+                    <p className="font-medium text-sm">
+                      {product.name}
+                      {offerSelection.includes(product.id) && (
+                        <span className="text-[var(--accent-soft)] text-xs mr-1">(عرض)</span>
+                      )}
+                    </p>
                     <p className="text-xs text-[var(--text-muted)]">{product.base_price} ريال</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => changeQty(product.id, -1)}
-                      className="w-7 h-7 rounded-full bg-[var(--bg)] flex items-center justify-center"
-                    >
-                      −
-                    </button>
-                    <span className="text-sm w-4 text-center">{qty}</span>
-                    <button
-                      onClick={() => changeQty(product.id, 1)}
-                      className="w-7 h-7 rounded-full bg-[var(--accent)] text-[#1c1815] flex items-center justify-center"
-                    >
-                      +
-                    </button>
-                  </div>
+                  {offerSelection.includes(product.id) ? (
+                    <span className="text-xs text-[var(--text-muted)]">×1</span>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => changeQty(product.id, -1)}
+                        className="w-7 h-7 rounded-full bg-[var(--bg)] flex items-center justify-center"
+                      >
+                        −
+                      </button>
+                      <span className="text-sm w-4 text-center">{qty}</span>
+                      <button
+                        onClick={() => changeQty(product.id, 1)}
+                        className="w-7 h-7 rounded-full bg-[var(--accent)] text-[#1c1815] flex items-center justify-center"
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
 
             {cartItems.length > 0 && (
               <div className="pt-4 border-t border-[var(--border)] mt-4">
+                {offerDiscount > 0 && (
+                  <div className="flex justify-between mb-1 text-sm text-[var(--accent-soft)]">
+                    <span>خصم عرض نهاية الأسبوع</span>
+                    <span>− {offerDiscount} ريال</span>
+                  </div>
+                )}
                 <div className="flex justify-between mb-4 font-semibold">
                   <span>الإجمالي</span>
                   <span className="text-[var(--accent-soft)]">{cartTotal} ريال</span>
