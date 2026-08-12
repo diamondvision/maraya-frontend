@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 const STATUS_LABELS = {
   pending: 'جديد',
   preparing: 'قيد التحضير',
-  ready: 'جاهز',
+  ready: 'قيد التسليم',
 };
 
 const NEXT_STATUS = {
@@ -16,7 +16,7 @@ const NEXT_STATUS = {
 
 const NEXT_LABEL = {
   pending: 'بدء التحضير',
-  preparing: 'تم التجهيز',
+  preparing: 'قيد التسليم',
   ready: 'تم التسليم',
 };
 
