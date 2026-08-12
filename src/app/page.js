@@ -234,7 +234,7 @@ export default function Home() {
 
         <div className="max-w-3xl mx-auto px-5 pb-4">
           <div
-            className="relative w-full h-32 rounded-2xl overflow-hidden transition-all duration-700"
+            className="relative w-full h-44 rounded-2xl overflow-hidden transition-all duration-700"
             style={
               activeOfferData.image
                 ? {
