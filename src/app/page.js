@@ -236,7 +236,15 @@ export default function Home() {
         <div className="max-w-3xl mx-auto px-5 pb-4">
           <div
             className="relative w-full rounded-2xl overflow-hidden flex items-center justify-between px-5 py-4 gap-3 transition-all duration-700"
-            style={{ background: activeOfferData.gradient }}
+            style={
+              activeOfferData.image
+                ? {
+                    backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.15)), url(${activeOfferData.image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }
+                : { background: activeOfferData.gradient }
+            }
           >
             <div className="flex-1">
               <span className="inline-block bg-white/90 text-[#1c1815] text-[10px] font-extrabold px-2 py-0.5 rounded-full mb-1">
