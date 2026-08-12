@@ -7,6 +7,7 @@ const OFFERS_CONFIG = [
     matchName: 'لاتيه',
     subtitle: 'قهوة مختصة مميزة',
     gradient: 'linear-gradient(135deg, #ff9a56, #d94f04)',
+    image: 'https://i.imgur.com/jgz5VaR.jpeg',
     emoji: '☕',
   },
   {
