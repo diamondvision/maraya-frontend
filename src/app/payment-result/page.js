@@ -25,38 +25,39 @@ export default function PaymentResult() {
       return;
     }
 
-    fetch(`https://maraya-backend.onrender.com/api/orders/${order_id}/confirm-payment`, {
+    fetch('https://maraya-backend.onrender.com/api/orders/' + order_id + '/confirm-payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ payment_id }),
     })
-      .then((res) => res.json())
-      .then((data) => {
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
         setPayStatus(data.success ? 'paid' : 'failed');
       })
-      .catch(() => setPayStatus('error'));
+      .catch(function () { setPayStatus('error'); });
   }, []);
 
   useEffect(() => {
     if (payStatus !== 'paid' || !orderId) return;
 
     function fetchStatus() {
-      fetch(`https://maraya-backend.onrender.com/api/orders/${orderId}`)
-        .then((res) => res.json())
-        .then((data) => setOrderStatus(data.order?.status))
-        .catch(() => {});
+      fetch('https://maraya-backend.onrender.com/api/orders/' + orderId)
+        .then(function (res) { return res.json(); })
+        .then(function (data) { setOrderStatus(data.order ? data.order.status : null); })
+        .catch(function () {});
     }
 
     fetchStatus();
     const interval = setInterval(fetchStatus, 5000);
-    return () => clearInterval(interval);
+    return function () { clearInterval(interval); };
   }, [payStatus, orderId]);
 
-  const currentStageIndex = STAGES.findIndex((s) => s.key === orderStatus);
+  const currentStageIndex = STAGES.findIndex(function (s) { return s.key === orderStatus; });
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] px-5">
       <div className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 text-center flex flex-col gap-4">
+
         {payStatus === 'checking' && (
           <div>
             <div className="text-5xl">⏳</div>
@@ -81,27 +82,20 @@ export default function PaymentResult() {
             </p>
 
             <div className="flex flex-col gap-3 mt-2">
-              {STAGES.map((stage, i) => {
+              {STAGES.map(function (stage, i) {
                 const isDone = currentStageIndex >= 0 && i <= currentStageIndex;
                 const isCurrent = i === currentStageIndex;
+                const boxClass = isCurrent
+                  ? 'border-[var(--accent)] bg-[var(--surface-2)]'
+                  : isDone
+                  ? 'border-[var(--border)] bg-[var(--surface-2)] opacity-60'
+                  : 'border-[var(--border)] opacity-30';
+                const textClass = isCurrent ? 'text-[var(--accent-soft)]' : '';
                 return (
-                  <div
-                    key={stage.key}
-                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                      isCurrent
-                        ? 'border-[var(--accent)] bg-[var(--surface-2)]'
-                        : isDone
-                        ? 'border-[var(--border)] bg-[var(--surface-2)] opacity-60'
-                        : 'border-[var(--border)] opacity-30'
-                    }`}
-                  >
+                  <div key={stage.key} className={'flex items-center gap-3 p-3 rounded-xl border transition-all ' + boxClass}>
                     <span className="text-2xl">{stage.emoji}</span>
-                    <span className={`text-sm font-medium ${isCurrent ? 'text-[var(--accent-soft)]' : ''}`}>
-                      {stage.label}
-                    </span>
-                    {isCurrent && (
-                      <span className="mr-auto w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
-                    )}
+                    <span className={'text-sm font-medium ' + textClass}>{stage.label}</span>
+                    {isCurrent && <span className="mr-auto w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></span>}
                   </div>
                 );
               })}
@@ -109,12 +103,8 @@ export default function PaymentResult() {
           </div>
         )}
 
-        
-          href="/"
-          className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2 inline-block"
-        >
-          العودة للمنيو
-        </a>
+        <a href="/" className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2 inline-block">العودة للمنيو</a>
+
       </div>
     </main>
   );
