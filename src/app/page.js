@@ -62,7 +62,16 @@ export default function Home() {
 
   useEffect(() => {
     const saved = localStorage.getItem('maraya_customer');
-    if (saved) setCustomer(JSON.parse(saved));
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const oneHour = 60 * 60 * 1000;
+      const isExpired = !parsed.savedAt || Date.now() - parsed.savedAt > oneHour;
+      if (isExpired) {
+        localStorage.removeItem('maraya_customer');
+      } else {
+        setCustomer(parsed);
+      }
+    }
 
     fetch('https://maraya-backend.onrender.com/api/menu')
       .then((res) => res.json())
@@ -80,7 +89,12 @@ export default function Home() {
   function handleRegister(e) {
     e.preventDefault();
     if (!formName.trim() || !formPhone.trim()) return;
-    const info = { name: formName.trim(), phone: formPhone.trim(), table: formTable.trim() };
+    const info = {
+      name: formName.trim(),
+      phone: formPhone.trim(),
+      table: formTable.trim(),
+      savedAt: Date.now(),
+    };
     localStorage.setItem('maraya_customer', JSON.stringify(info));
     setCustomer(info);
   }
