@@ -12,7 +12,7 @@ const OFFERS_CONFIG = [
   },
   {
     matchName: 'آيس لاتيه',
-    subtitle: 'انتعش مع مرايا',
+    subtitle: 'انتعش مع مراية',
     gradient: 'linear-gradient(135deg, #4facfe, #00c6ae)',
     emoji: '🧊',
   },
@@ -306,7 +306,7 @@ export default function Home() {
       <header className="sticky top-0 z-20 bg-[var(--bg)] border-b border-[var(--border)]">
         <div className="max-w-3xl mx-auto px-5 pt-6 pb-4 text-center">
           <h1 className="text-3xl font-extrabold tracking-tight text-[var(--accent-soft)]">
-            مرايا
+            مراية
           </h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">
             أهلاً {customer.name} {customer.table ? `— طاولة ${customer.table}` : ''}
