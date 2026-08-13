@@ -242,7 +242,7 @@ export default function Home() {
           className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 flex flex-col gap-4"
         >
           <div className="text-center mb-2">
-            <h1 className="text-3xl font-extrabold text-[var(--accent-soft)]">مرايا</h1>
+            <h1 className="text-3xl font-extrabold text-[var(--accent-soft)]">مراية</h1>
             <p className="text-sm text-[var(--text-muted)] mt-1">قهوة مختصة — الرياض</p>
           </div>
 
