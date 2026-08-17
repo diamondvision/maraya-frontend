@@ -11,10 +11,11 @@ const OFFERS_CONFIG = [
     emoji: '☕',
   },
   {
-    matchName: 'آيس لاتيه',
-    subtitle: 'انتعش مع مراية',
-    gradient: 'linear-gradient(135deg, #4facfe, #00c6ae)',
-    emoji: '🧊',
+    matchName: 'كيكة مراية',
+    subtitle: 'حلاوة تستاهل تجربها',
+    gradient: 'linear-gradient(135deg, #f857a6, #ff5858)',
+    image: 'https://i.imgur.com/ZF4TVwI.png',
+    emoji: '🍰',
   },
 {
     matchName: 'آيس لاتيه',
