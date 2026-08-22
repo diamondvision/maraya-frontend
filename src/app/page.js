@@ -50,14 +50,10 @@ const TRANSLATIONS = {
     visitPopupWon: '🎉 مبروك! استحققت طلب مجاني — تفقد رسالة التهنئة بعد الدفع',
     continueToMenu: 'متابعة إلى المنيو',
     errorGeneric: 'حصل خطأ: ',
-    scratchTitle: '🎁 خربش واكسب!',
-    scratchSubtitle: 'خربش البطاقة بإصبعك أو الماوس',
-    scratchWinTitle: (p) => `🎉 مبروك! خصم ${p}%`,
-    scratchWinSubtitle: 'انسخ الكود واستخدمه في طلبك الحالي:',
-    scratchLoseTitle: '😔 حظ أوفر المرة الجاية',
-    scratchLoseSubtitle: 'حاول تاني بعد 3 أيام',
-    copyCode: 'نسخ الكود',
-    copied: 'تم النسخ ✓',
+    scratchSubtitle: 'خربش',
+    scratchWinTitle: (p) => `🎉 خصم ${p}%`,
+    copyCode: 'نسخ',
+    copied: '✓',
   },
   en: {
     dir: 'ltr',
@@ -106,14 +102,10 @@ const TRANSLATIONS = {
     visitPopupWon: "🎉 Congrats! You've earned a free order — check your confirmation after payment",
     continueToMenu: 'Continue to menu',
     errorGeneric: 'Something went wrong: ',
-    scratchTitle: '🎁 Scratch & Win!',
-    scratchSubtitle: 'Scratch with your finger or mouse',
-    scratchWinTitle: (p) => `🎉 Congrats! ${p}% off`,
-    scratchWinSubtitle: 'Copy the code and use it on your current order:',
-    scratchLoseTitle: '😔 Better luck next time',
-    scratchLoseSubtitle: 'Try again in 3 days',
-    copyCode: 'Copy code',
-    copied: 'Copied ✓',
+    scratchSubtitle: 'Scratch',
+    scratchWinTitle: (p) => `🎉 ${p}% off`,
+    copyCode: 'Copy',
+    copied: '✓',
   },
 };
 
@@ -172,10 +164,13 @@ function ScratchCard({ result, t, onCopy, copied }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#c17f3d';
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#ffd166');
+    gradient.addColorStop(1, '#ef476f');
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#1c1815';
-    ctx.font = 'bold 15px sans-serif';
+    ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(t.scratchSubtitle, canvas.width / 2, canvas.height / 2);
   }, [t]);
@@ -197,7 +192,7 @@ function ScratchCard({ result, t, onCopy, copied }) {
     const ctx = canvas.getContext('2d');
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
-    ctx.arc(x, y, 22, 0, Math.PI * 2);
+    ctx.arc(x, y, 18, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -226,38 +221,26 @@ function ScratchCard({ result, t, onCopy, copied }) {
   }
 
   return (
-    <div className="relative w-full h-36 rounded-2xl overflow-hidden border border-[var(--accent)] bg-[var(--surface)]">
-      <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center gap-1">
-        {result.won ? (
-          <>
-            <p className="text-[var(--accent-soft)] font-extrabold text-base">
-              {t.scratchWinTitle(result.discount_percent)}
-            </p>
-            <p className="text-[var(--text-muted)] text-xs">{t.scratchWinSubtitle}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-base font-extrabold tracking-wider text-[var(--accent-soft)]">
-                {result.code}
-              </span>
-              <button
-                onClick={() => onCopy(result.code)}
-                className="text-xs px-2 py-1 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold"
-              >
-                {copied ? t.copied : t.copyCode}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="font-bold text-sm">{t.scratchLoseTitle}</p>
-            <p className="text-[var(--text-muted)] text-xs">{t.scratchLoseSubtitle}</p>
-          </>
-        )}
+    <div className="relative w-full h-24 rounded-2xl overflow-hidden border-2 border-[#ffd166] bg-[var(--surface)]">
+      <div className="absolute inset-0 flex items-center justify-center px-4 text-center gap-2">
+        <p className="text-[var(--accent-soft)] font-extrabold text-sm">
+          {t.scratchWinTitle(result.discount_percent)}
+        </p>
+        <span className="text-sm font-extrabold tracking-wider text-[var(--accent-soft)]">
+          {result.code}
+        </span>
+        <button
+          onClick={() => onCopy(result.code)}
+          className="text-xs px-2 py-1 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold shrink-0"
+        >
+          {copied ? t.copied : t.copyCode}
+        </button>
       </div>
       {!revealed && (
         <canvas
           ref={canvasRef}
           width={340}
-          height={144}
+          height={96}
           className="absolute inset-0 w-full h-full cursor-pointer touch-none"
           onMouseDown={handleStart}
           onMouseMove={handleMove}
@@ -692,7 +675,6 @@ export default function Home() {
 
         {scratchData && (
           <div className="max-w-3xl mx-auto px-5 pb-4">
-            <p className="font-bold text-sm mb-2">{t.scratchTitle}</p>
             <ScratchCard result={scratchData.result} t={t} onCopy={copyScratchCode} copied={scratchCopied} />
           </div>
         )}
