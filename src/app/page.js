@@ -2,24 +2,123 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+const TRANSLATIONS = {
+  ar: {
+    dir: 'rtl',
+    brand: 'مراية',
+    tagline: 'قهوة مختصة — الرياض',
+    nameLabel: 'الاسم',
+    namePlaceholder: 'اسمك',
+    phoneLabel: 'رقم الجوال',
+    phonePlaceholder: '05xxxxxxxx',
+    tableLabel: 'رقم الطاولة (اختياري)',
+    tablePlaceholder: 'مثال: T1',
+    carLabel: 'رقم السيارة / اللوحة (اختياري)',
+    carPlaceholder: 'مثال: أ ب ج 1234',
+    continueBtn: 'متابعة إلى المنيو',
+    loadingMenu: 'جاري تحميل المنيو...',
+    welcome: 'أهلاً',
+    table: 'طاولة',
+    car: 'سيارة',
+    visit: 'زيارتك',
+    of5: 'من 5',
+    locationChecking: '📍 جاري التحقق من موقعك...',
+    locationDenied: '📍 محتاجين إذن موقعك عشان تقدر تأكد الطلب. تصفح براحتك، وفعّل إذن الموقع لما تكون جاهز تطلب.',
+    locationOutOfRange: '🚫 أنت خارج نطاق مراية كافيه حاليًا. تقدر تتصفح المنيو، لكن لازم تكون قريب من الكافيه عشان تأكد الطلب.',
+    weekendOfferTitle: 'عرض نهاية الأسبوع 🎉 اشترِ مشروب واحصل على الآخر مجانًا',
+    weekendOfferSubtitle: 'اضغط هنا لاختيار مشروبَيك',
+    offerModeText: (n) => `اختر مشروبين (${n}/2) — هتدفع سعر الأعلى بس`,
+    cancel: 'إلغاء',
+    offerSelectedText: (d) => `🎉 تم اختيار مشروبَي العرض — خصم ${d} ريال مطبّق`,
+    riyal: 'ريال',
+    chooseForOffer: 'اختر للعرض',
+    selected: '✓ تم الاختيار',
+    addToCart: 'إضافة للسلة',
+    viewCart: 'عرض السلة',
+    cartTitle: 'سلة الطلب',
+    emptyCart: 'السلة فاضية',
+    offerLabel: '(عرض)',
+    weekendDiscount: 'خصم عرض نهاية الأسبوع',
+    total: 'الإجمالي',
+    rewardCodePlaceholder: 'كود الخصم (إن وجد)',
+    locationRequired: '🚫 لازم تكون قريب من مراية كافيه عشان تقدر تأكد الطلب',
+    confirmOrder: 'تأكيد الطلب',
+    sending: 'جاري الإرسال...',
+    visitPopupTitle: 'أهلاً بك في مراية!',
+    visitPopupVisit: (n) => `هذه زيارتك رقم ${n}`,
+    visitPopupRemaining: (n) => `باقي لك ${n} ${n === 1 ? 'زيارة' : 'زيارات'} وتحصل على طلب مجاني! 🎉`,
+    visitPopupWon: '🎉 مبروك! استحققت طلب مجاني — تفقد رسالة التهنئة بعد الدفع',
+    continueToMenu: 'متابعة إلى المنيو',
+    errorGeneric: 'حصل خطأ: ',
+  },
+  en: {
+    dir: 'ltr',
+    brand: 'Maraya',
+    tagline: 'Specialty Coffee — Riyadh',
+    nameLabel: 'Name',
+    namePlaceholder: 'Your name',
+    phoneLabel: 'Phone number',
+    phonePlaceholder: '05xxxxxxxx',
+    tableLabel: 'Table number (optional)',
+    tablePlaceholder: 'e.g. T1',
+    carLabel: 'Car / plate number (optional)',
+    carPlaceholder: 'e.g. ABC 1234',
+    continueBtn: 'Continue to menu',
+    loadingMenu: 'Loading menu...',
+    welcome: 'Welcome',
+    table: 'Table',
+    car: 'Car',
+    visit: 'Visit',
+    of5: 'of 5',
+    locationChecking: '📍 Checking your location...',
+    locationDenied: "📍 We need your location to confirm orders. Feel free to browse, and enable location when you're ready to order.",
+    locationOutOfRange: "🚫 You're currently outside Maraya Cafe's range. You can browse the menu, but you must be near the cafe to confirm an order.",
+    weekendOfferTitle: 'Weekend Offer 🎉 Buy one drink, get another free',
+    weekendOfferSubtitle: 'Tap here to pick your two drinks',
+    offerModeText: (n) => `Pick two drinks (${n}/2) — you'll only pay for the pricier one`,
+    cancel: 'Cancel',
+    offerSelectedText: (d) => `🎉 Offer drinks selected — SAR ${d} discount applied`,
+    riyal: 'SAR',
+    chooseForOffer: 'Select for offer',
+    selected: '✓ Selected',
+    addToCart: 'Add to cart',
+    viewCart: 'View cart',
+    cartTitle: 'Your order',
+    emptyCart: 'Your cart is empty',
+    offerLabel: '(offer)',
+    weekendDiscount: 'Weekend offer discount',
+    total: 'Total',
+    rewardCodePlaceholder: 'Discount code (if any)',
+    locationRequired: '🚫 You must be near Maraya Cafe to confirm your order',
+    confirmOrder: 'Confirm order',
+    sending: 'Sending...',
+    visitPopupTitle: 'Welcome to Maraya!',
+    visitPopupVisit: (n) => `This is your visit #${n}`,
+    visitPopupRemaining: (n) => `${n} more visit${n === 1 ? '' : 's'} until you get a free order! 🎉`,
+    visitPopupWon: "🎉 Congrats! You've earned a free order — check your confirmation after payment",
+    continueToMenu: 'Continue to menu',
+    errorGeneric: 'Something went wrong: ',
+  },
+};
+
 const OFFERS_CONFIG = [
   {
     matchName: 'لاتيه',
-    subtitle: 'قهوة مختصة مميزة',
+    subtitle: { ar: 'قهوة مختصة مميزة', en: 'A signature specialty coffee' },
     gradient: 'linear-gradient(135deg, #ff9a56, #d94f04)',
     image: 'https://i.imgur.com/jgz5VaR.jpeg',
     emoji: '☕',
   },
   {
     matchName: 'كيكة مراية',
-    subtitle: 'حلاوة تستاهل تجربها',
+    subtitle: { ar: 'حلاوة تستاهل تجربها', en: 'A sweetness worth trying' },
     gradient: 'linear-gradient(135deg, #f857a6, #ff5858)',
     image: 'https://i.imgur.com/ZF4TVwI.png',
     emoji: '🍰',
   },
   {
     matchName: 'آيس لاتيه',
-    subtitle: 'انتعش مع مرايا',
+    subtitle: { ar: 'انتعش مع مرايا', en: 'Refresh with Maraya' },
     gradient: 'linear-gradient(135deg, #4facfe, #00c6ae)',
     image: 'https://i.imgur.com/xI1dlvM.png',
     emoji: '🧊',
@@ -44,11 +143,14 @@ function getDistanceMeters(lat1, lng1, lat2, lng2) {
 
 function isRiyadhWeekend() {
   const riyadhNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Riyadh' }));
-  const day = riyadhNow.getDay(); // 0=Sun ... 4=Thu, 5=Fri, 6=Sat
+  const day = riyadhNow.getDay();
   return [4, 5, 6].includes(day);
 }
 
 export default function Home() {
+  const [lang, setLang] = useState('ar');
+  const t = TRANSLATIONS[lang];
+
   const [menu, setMenu] = useState({ categories: [], products: [] });
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState(null);
@@ -57,7 +159,7 @@ export default function Home() {
   const [justAdded, setJustAdded] = useState(null);
 
   const [customer, setCustomer] = useState(null);
-  const [locationStatus, setLocationStatus] = useState('checking'); // checking | allowed | denied | out_of_range
+  const [locationStatus, setLocationStatus] = useState('checking');
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formTable, setFormTable] = useState('');
@@ -65,16 +167,25 @@ export default function Home() {
 
   const [submitting, setSubmitting] = useState(false);
   const [rewardCodeInput, setRewardCodeInput] = useState('');
-  const [visitPopup, setVisitPopup] = useState(null); // { visitNumber, remaining }
+  const [visitPopup, setVisitPopup] = useState(null);
   const [visitCount, setVisitCount] = useState(null);
 
   const [currentOffer, setCurrentOffer] = useState(0);
 
-  // وضع عرض "اشترِ مشروب واحصل على الآخر مجانًا"
   const [offerMode, setOfferMode] = useState(false);
-  const [offerSelection, setOfferSelection] = useState([]); // array of product ids
+  const [offerSelection, setOfferSelection] = useState([]);
 
   const weekendOfferActive = isRiyadhWeekend();
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('maraya_lang');
+    if (savedLang === 'ar' || savedLang === 'en') setLang(savedLang);
+  }, []);
+
+  function switchLang(newLang) {
+    setLang(newLang);
+    localStorage.setItem('maraya_lang', newLang);
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -261,18 +372,18 @@ export default function Home() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'حصل خطأ');
+      if (!res.ok) throw new Error(data.error || 'Error');
 
       const payRes = await fetch(
         `https://maraya-backend.onrender.com/api/orders/${data.order_id}/create-payment`,
         { method: 'POST' }
       );
       const payData = await payRes.json();
-      if (!payRes.ok) throw new Error(payData.error || 'فشل إنشاء رابط الدفع');
+      if (!payRes.ok) throw new Error(payData.error || 'Payment link failed');
 
       window.location.href = payData.url;
     } catch (err) {
-      alert('حصل خطأ: ' + err.message);
+      alert(t.errorGeneric + err.message);
       setSubmitting(false);
     }
   }
@@ -291,61 +402,79 @@ export default function Home() {
     [menu.products]
   );
 
+  const LangSwitcher = (
+    <div className="flex justify-center gap-2 pt-4">
+      <button
+        onClick={() => switchLang('ar')}
+        className={`px-3 py-1 rounded-full text-xs font-bold ${
+          lang === 'ar' ? 'bg-[var(--accent)] text-[#1c1815]' : 'border border-[var(--border)] text-[var(--text-muted)]'
+        }`}
+      >
+        العربية
+      </button>
+      <button
+        onClick={() => switchLang('en')}
+        className={`px-3 py-1 rounded-full text-xs font-bold ${
+          lang === 'en' ? 'bg-[var(--accent)] text-[#1c1815]' : 'border border-[var(--border)] text-[var(--text-muted)]'
+        }`}
+      >
+        English
+      </button>
+    </div>
+  );
+
   if (!customer) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] px-5">
+      <main dir={t.dir} className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg)] text-[var(--text)] px-5">
+        {LangSwitcher}
         <form
           onSubmit={handleRegister}
-          className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 flex flex-col gap-4"
+          className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 flex flex-col gap-4 mt-4"
         >
           <div className="text-center mb-2">
-            <h1 className="text-3xl font-extrabold text-[var(--accent-soft)]">مراية</h1>
-            <p className="text-sm text-[var(--text-muted)] mt-1">قهوة مختصة — الرياض</p>
+            <h1 className="text-3xl font-extrabold text-[var(--accent-soft)]">{t.brand}</h1>
+            <p className="text-sm text-[var(--text-muted)] mt-1">{t.tagline}</p>
           </div>
 
           <div>
-            <label className="text-sm text-[var(--text-muted)] mb-1 block">الاسم</label>
+            <label className="text-sm text-[var(--text-muted)] mb-1 block">{t.nameLabel}</label>
             <input
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-2 outline-none focus:border-[var(--accent)]"
-              placeholder="اسمك"
+              placeholder={t.namePlaceholder}
               required
             />
           </div>
 
           <div>
-            <label className="text-sm text-[var(--text-muted)] mb-1 block">رقم الجوال</label>
+            <label className="text-sm text-[var(--text-muted)] mb-1 block">{t.phoneLabel}</label>
             <input
               value={formPhone}
               onChange={(e) => setFormPhone(e.target.value)}
               className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-2 outline-none focus:border-[var(--accent)]"
-              placeholder="05xxxxxxxx"
+              placeholder={t.phonePlaceholder}
               required
             />
           </div>
 
           <div>
-            <label className="text-sm text-[var(--text-muted)] mb-1 block">
-              رقم الطاولة (اختياري)
-            </label>
+            <label className="text-sm text-[var(--text-muted)] mb-1 block">{t.tableLabel}</label>
             <input
               value={formTable}
               onChange={(e) => setFormTable(e.target.value)}
               className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-2 outline-none focus:border-[var(--accent)]"
-              placeholder="مثال: T1"
+              placeholder={t.tablePlaceholder}
             />
           </div>
 
           <div>
-            <label className="text-sm text-[var(--text-muted)] mb-1 block">
-              رقم السيارة / اللوحة (اختياري)
-            </label>
+            <label className="text-sm text-[var(--text-muted)] mb-1 block">{t.carLabel}</label>
             <input
               value={formCar}
               onChange={(e) => setFormCar(e.target.value)}
               className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-2 outline-none focus:border-[var(--accent)]"
-              placeholder="مثال: أ ب ج 1234"
+              placeholder={t.carPlaceholder}
             />
           </div>
 
@@ -353,7 +482,7 @@ export default function Home() {
             type="submit"
             className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2"
           >
-            متابعة إلى المنيو
+            {t.continueBtn}
           </button>
         </form>
       </main>
@@ -362,8 +491,8 @@ export default function Home() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)]">
-        <p className="font-display text-lg">جاري تحميل المنيو...</p>
+      <main dir={t.dir} className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)]">
+        <p className="font-display text-lg">{t.loadingMenu}</p>
       </main>
     );
   }
@@ -371,18 +500,35 @@ export default function Home() {
   const activeOfferData = offers[currentOffer];
 
   return (
-    <main className="min-h-screen bg-[var(--bg)] text-[var(--text)] pb-32">
+    <main dir={t.dir} className="min-h-screen bg-[var(--bg)] text-[var(--text)] pb-32">
       <header className="sticky top-0 z-20 bg-[var(--bg)] border-b border-[var(--border)]">
-        <div className="max-w-3xl mx-auto px-5 pt-6 pb-4 text-center">
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--accent-soft)]">
-            مراية
-          </h1>
+        <div className="max-w-3xl mx-auto px-5 pt-4 pb-2 flex justify-center gap-2">
+          <button
+            onClick={() => switchLang('ar')}
+            className={`px-3 py-1 rounded-full text-xs font-bold ${
+              lang === 'ar' ? 'bg-[var(--accent)] text-[#1c1815]' : 'border border-[var(--border)] text-[var(--text-muted)]'
+            }`}
+          >
+            العربية
+          </button>
+          <button
+            onClick={() => switchLang('en')}
+            className={`px-3 py-1 rounded-full text-xs font-bold ${
+              lang === 'en' ? 'bg-[var(--accent)] text-[#1c1815]' : 'border border-[var(--border)] text-[var(--text-muted)]'
+            }`}
+          >
+            English
+          </button>
+        </div>
+
+        <div className="max-w-3xl mx-auto px-5 pt-2 pb-4 text-center">
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--accent-soft)]">{t.brand}</h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">
-            أهلاً {customer.name}
-            {customer.table ? ` — طاولة ${customer.table}` : ''}
-            {customer.car ? ` — سيارة ${customer.car}` : ''}
+            {t.welcome} {customer.name}
+            {customer.table ? ` — ${t.table} ${customer.table}` : ''}
+            {customer.car ? ` — ${t.car} ${customer.car}` : ''}
             {visitCount !== null && (
-              <span className="text-[var(--accent-soft)] font-medium"> — زيارتك {visitCount} من 5</span>
+              <span className="text-[var(--accent-soft)] font-medium"> — {t.visit} {visitCount} {t.of5}</span>
             )}
           </p>
         </div>
@@ -419,10 +565,10 @@ export default function Home() {
             <div className="rounded-2xl px-5 py-3 bg-red-500/10 border border-red-500/40">
               <p className="text-sm font-medium text-red-500">
                 {locationStatus === 'checking'
-                  ? '📍 جاري التحقق من موقعك...'
+                  ? t.locationChecking
                   : locationStatus === 'denied'
-                  ? '📍 محتاجين إذن موقعك عشان تقدر تأكد الطلب. تصفح براحتك، وفعّل إذن الموقع لما تكون جاهز تطلب.'
-                  : '🚫 أنت خارج نطاق مراية كافيه حاليًا. تقدر تتصفح المنيو، لكن لازم تكون قريب من الكافيه عشان تأكد الطلب.'}
+                  ? t.locationDenied
+                  : t.locationOutOfRange}
               </p>
             </div>
           </div>
@@ -436,10 +582,8 @@ export default function Home() {
               style={{ background: 'linear-gradient(135deg, #ffd166, #ef476f)' }}
             >
               <div>
-                <p className="text-white font-extrabold text-sm">
-                  عرض نهاية الأسبوع 🎉 اشترِ مشروب واحصل على الآخر مجانًا
-                </p>
-                <p className="text-white/80 text-xs mt-0.5">اضغط هنا لاختيار مشروبَيك</p>
+                <p className="text-white font-extrabold text-sm">{t.weekendOfferTitle}</p>
+                <p className="text-white/80 text-xs mt-0.5">{t.weekendOfferSubtitle}</p>
               </div>
               <span className="text-2xl">🥤</span>
             </button>
@@ -449,14 +593,9 @@ export default function Home() {
         {offerMode && (
           <div className="max-w-3xl mx-auto px-5 pb-4">
             <div className="rounded-2xl px-5 py-3 flex items-center justify-between bg-[var(--surface-2)] border border-[var(--accent)]">
-              <p className="text-sm font-medium">
-                اختر مشروبين ({offerSelection.length}/2) — هتدفع سعر الأعلى بس
-              </p>
-              <button
-                onClick={cancelOfferMode}
-                className="text-xs text-[var(--text-muted)] underline"
-              >
-                إلغاء
+              <p className="text-sm font-medium">{t.offerModeText(offerSelection.length)}</p>
+              <button onClick={cancelOfferMode} className="text-xs text-[var(--text-muted)] underline">
+                {t.cancel}
               </button>
             </div>
           </div>
@@ -465,14 +604,9 @@ export default function Home() {
         {offerSelection.length === 2 && (
           <div className="max-w-3xl mx-auto px-5 pb-4">
             <div className="rounded-2xl px-5 py-3 flex items-center justify-between bg-[var(--surface-2)] border border-[var(--accent)]">
-              <p className="text-sm font-medium text-[var(--accent-soft)]">
-                🎉 تم اختيار مشروبَي العرض — خصم {offerDiscount} ريال مطبّق
-              </p>
-              <button
-                onClick={cancelOfferMode}
-                className="text-xs text-[var(--text-muted)] underline"
-              >
-                إلغاء
+              <p className="text-sm font-medium text-[var(--accent-soft)]">{t.offerSelectedText(offerDiscount)}</p>
+              <button onClick={cancelOfferMode} className="text-xs text-[var(--text-muted)] underline">
+                {t.cancel}
               </button>
             </div>
           </div>
@@ -515,13 +649,11 @@ export default function Home() {
                 <div>
                   <h3 className="font-display font-bold text-base">{product.name}</h3>
                   {product.description && (
-                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                      {product.description}
-                    </p>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">{product.description}</p>
                   )}
                 </div>
                 <span className="shrink-0 text-[var(--accent-soft)] font-semibold text-sm">
-                  {product.base_price} ريال
+                  {product.base_price} {t.riyal}
                 </span>
               </div>
 
@@ -535,7 +667,7 @@ export default function Home() {
                       : 'border border-[var(--accent)] text-[var(--accent-soft)] hover:bg-[var(--accent)] hover:text-[#1c1815]'
                   } disabled:opacity-40`}
                 >
-                  {isSelectedForOffer ? '✓ تم الاختيار' : 'اختر للعرض'}
+                  {isSelectedForOffer ? t.selected : t.chooseForOffer}
                 </button>
               ) : inCart ? (
                 <div className="flex items-center justify-between bg-[var(--surface-2)] rounded-full px-2 py-1">
@@ -558,7 +690,7 @@ export default function Home() {
                   onClick={() => addToCart(product)}
                   className="w-full py-2 rounded-full border border-[var(--accent)] text-[var(--accent-soft)] font-medium text-sm hover:bg-[var(--accent)] hover:text-[#1c1815] transition-colors"
                 >
-                  إضافة للسلة
+                  {t.addToCart}
                 </button>
               )}
             </div>
@@ -574,8 +706,8 @@ export default function Home() {
           <span className="bg-[#1c1815] text-[var(--accent-soft)] text-xs w-6 h-6 rounded-full flex items-center justify-center">
             {cartCount}
           </span>
-          عرض السلة
-          <span>{cartTotal} ريال</span>
+          {t.viewCart}
+          <span>{cartTotal} {t.riyal}</span>
         </button>
       )}
 
@@ -583,24 +715,18 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center px-5 bg-black/60">
           <div className="w-full max-w-sm bg-[var(--surface)] border border-[var(--accent)] rounded-2xl p-6 text-center flex flex-col gap-3">
             <div className="text-5xl">☕</div>
-            <h2 className="text-lg font-bold">أهلاً بك في مراية!</h2>
-            <p className="text-[var(--accent-soft)] font-semibold">
-              هذه زيارتك رقم {visitPopup.visitNumber}
-            </p>
+            <h2 className="text-lg font-bold">{t.visitPopupTitle}</h2>
+            <p className="text-[var(--accent-soft)] font-semibold">{t.visitPopupVisit(visitPopup.visitNumber)}</p>
             {visitPopup.remaining > 0 ? (
-              <p className="text-[var(--text-muted)] text-sm">
-                باقي لك {visitPopup.remaining} {visitPopup.remaining === 1 ? 'زيارة' : 'زيارات'} وتحصل على طلب مجاني! 🎉
-              </p>
+              <p className="text-[var(--text-muted)] text-sm">{t.visitPopupRemaining(visitPopup.remaining)}</p>
             ) : (
-              <p className="text-[var(--accent-soft)] text-sm font-medium">
-                🎉 مبروك! استحققت طلب مجاني — تفقد رسالة التهنئة بعد الدفع
-              </p>
+              <p className="text-[var(--accent-soft)] text-sm font-medium">{t.visitPopupWon}</p>
             )}
             <button
               onClick={() => setVisitPopup(null)}
               className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2"
             >
-              متابعة إلى المنيو
+              {t.continueToMenu}
             </button>
           </div>
         </div>
@@ -614,32 +740,26 @@ export default function Home() {
             style={{ animation: 'slideIn 0.25s ease-out' }}
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display font-bold text-lg">سلة الطلب</h2>
-              <button
-                onClick={() => setCartOpen(false)}
-                className="text-[var(--text-muted)] text-2xl leading-none"
-              >
+              <h2 className="font-display font-bold text-lg">{t.cartTitle}</h2>
+              <button onClick={() => setCartOpen(false)} className="text-[var(--text-muted)] text-2xl leading-none">
                 ×
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto flex flex-col gap-3">
               {cartItems.length === 0 && (
-                <p className="text-[var(--text-muted)] text-sm text-center mt-10">السلة فاضية</p>
+                <p className="text-[var(--text-muted)] text-sm text-center mt-10">{t.emptyCart}</p>
               )}
               {cartItems.map(({ product, qty }) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between gap-2 bg-[var(--surface-2)] rounded-xl p-3"
-                >
+                <div key={product.id} className="flex items-center justify-between gap-2 bg-[var(--surface-2)] rounded-xl p-3">
                   <div>
                     <p className="font-medium text-sm">
                       {product.name}
                       {offerSelection.includes(product.id) && (
-                        <span className="text-[var(--accent-soft)] text-xs mr-1">(عرض)</span>
+                        <span className="text-[var(--accent-soft)] text-xs mr-1">{t.offerLabel}</span>
                       )}
                     </p>
-                    <p className="text-xs text-[var(--text-muted)]">{product.base_price} ريال</p>
+                    <p className="text-xs text-[var(--text-muted)]">{product.base_price} {t.riyal}</p>
                   </div>
                   {offerSelection.includes(product.id) ? (
                     <span className="text-xs text-[var(--text-muted)]">×1</span>
@@ -668,31 +788,29 @@ export default function Home() {
               <div className="pt-4 border-t border-[var(--border)] mt-4">
                 {offerDiscount > 0 && (
                   <div className="flex justify-between mb-1 text-sm text-[var(--accent-soft)]">
-                    <span>خصم عرض نهاية الأسبوع</span>
-                    <span>− {offerDiscount} ريال</span>
+                    <span>{t.weekendDiscount}</span>
+                    <span>− {offerDiscount} {t.riyal}</span>
                   </div>
                 )}
                 <div className="flex justify-between mb-4 font-semibold">
-                  <span>الإجمالي</span>
-                  <span className="text-[var(--accent-soft)]">{cartTotal} ريال</span>
+                  <span>{t.total}</span>
+                  <span className="text-[var(--accent-soft)]">{cartTotal} {t.riyal}</span>
                 </div>
                 <input
                   value={rewardCodeInput}
                   onChange={(e) => setRewardCodeInput(e.target.value)}
-                  placeholder="كود الخصم (إن وجد)"
+                  placeholder={t.rewardCodePlaceholder}
                   className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-2 outline-none focus:border-[var(--accent)] text-sm mb-3"
                 />
                 {locationStatus !== 'allowed' && (
-                  <p className="text-xs text-red-500 text-center mb-2">
-                    🚫 لازم تكون قريب من مراية كافيه عشان تقدر تأكد الطلب
-                  </p>
+                  <p className="text-xs text-red-500 text-center mb-2">{t.locationRequired}</p>
                 )}
                 <button
                   onClick={submitOrder}
                   disabled={submitting || locationStatus !== 'allowed'}
                   className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold disabled:opacity-50"
                 >
-                  {submitting ? 'جاري الإرسال...' : 'تأكيد الطلب'}
+                  {submitting ? t.sending : t.confirmOrder}
                 </button>
               </div>
             )}
