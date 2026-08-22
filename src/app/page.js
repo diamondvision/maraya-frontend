@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 
 const TRANSLATIONS = {
   ar: {
@@ -50,6 +50,14 @@ const TRANSLATIONS = {
     visitPopupWon: '🎉 مبروك! استحققت طلب مجاني — تفقد رسالة التهنئة بعد الدفع',
     continueToMenu: 'متابعة إلى المنيو',
     errorGeneric: 'حصل خطأ: ',
+    scratchTitle: '🎁 خربش واكسب!',
+    scratchSubtitle: 'خربش البطاقة بإصبعك أو الماوس',
+    scratchWinTitle: (p) => `🎉 مبروك! خصم ${p}%`,
+    scratchWinSubtitle: 'انسخ الكود واستخدمه في طلبك الحالي:',
+    scratchLoseTitle: '😔 حظ أوفر المرة الجاية',
+    scratchLoseSubtitle: 'حاول تاني بعد 3 أيام',
+    copyCode: 'نسخ الكود',
+    copied: 'تم النسخ ✓',
   },
   en: {
     dir: 'ltr',
@@ -98,6 +106,14 @@ const TRANSLATIONS = {
     visitPopupWon: "🎉 Congrats! You've earned a free order — check your confirmation after payment",
     continueToMenu: 'Continue to menu',
     errorGeneric: 'Something went wrong: ',
+    scratchTitle: '🎁 Scratch & Win!',
+    scratchSubtitle: 'Scratch with your finger or mouse',
+    scratchWinTitle: (p) => `🎉 Congrats! ${p}% off`,
+    scratchWinSubtitle: 'Copy the code and use it on your current order:',
+    scratchLoseTitle: '😔 Better luck next time',
+    scratchLoseSubtitle: 'Try again in 3 days',
+    copyCode: 'Copy code',
+    copied: 'Copied ✓',
   },
 };
 
@@ -147,6 +163,115 @@ function isRiyadhWeekend() {
   return [4, 5, 6].includes(day);
 }
 
+function ScratchCard({ result, t, onCopy, copied }) {
+  const canvasRef = useRef(null);
+  const [revealed, setRevealed] = useState(false);
+  const isDrawing = useRef(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#c17f3d';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#1c1815';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(t.scratchSubtitle, canvas.width / 2, canvas.height / 2);
+  }, [t]);
+
+  function checkRevealPercent() {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let transparent = 0;
+    for (let i = 3; i < imageData.data.length; i += 4) {
+      if (imageData.data[i] === 0) transparent++;
+    }
+    const percent = transparent / (imageData.data.length / 4);
+    if (percent > 0.5) setRevealed(true);
+  }
+
+  function scratchAt(x, y) {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x, y, 22, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function getPos(e, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function handleStart(e) {
+    isDrawing.current = true;
+    const pos = getPos(e, canvasRef.current);
+    scratchAt(pos.x, pos.y);
+  }
+
+  function handleMove(e) {
+    if (!isDrawing.current) return;
+    const pos = getPos(e, canvasRef.current);
+    scratchAt(pos.x, pos.y);
+    checkRevealPercent();
+  }
+
+  function handleEnd() {
+    isDrawing.current = false;
+  }
+
+  return (
+    <div className="relative w-full h-36 rounded-2xl overflow-hidden border border-[var(--accent)] bg-[var(--surface)]">
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center gap-1">
+        {result.won ? (
+          <>
+            <p className="text-[var(--accent-soft)] font-extrabold text-base">
+              {t.scratchWinTitle(result.discount_percent)}
+            </p>
+            <p className="text-[var(--text-muted)] text-xs">{t.scratchWinSubtitle}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-base font-extrabold tracking-wider text-[var(--accent-soft)]">
+                {result.code}
+              </span>
+              <button
+                onClick={() => onCopy(result.code)}
+                className="text-xs px-2 py-1 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold"
+              >
+                {copied ? t.copied : t.copyCode}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="font-bold text-sm">{t.scratchLoseTitle}</p>
+            <p className="text-[var(--text-muted)] text-xs">{t.scratchLoseSubtitle}</p>
+          </>
+        )}
+      </div>
+      {!revealed && (
+        <canvas
+          ref={canvasRef}
+          width={340}
+          height={144}
+          className="absolute inset-0 w-full h-full cursor-pointer touch-none"
+          onMouseDown={handleStart}
+          onMouseMove={handleMove}
+          onMouseUp={handleEnd}
+          onMouseLeave={handleEnd}
+          onTouchStart={handleStart}
+          onTouchMove={handleMove}
+          onTouchEnd={handleEnd}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const [lang, setLang] = useState('ar');
   const t = TRANSLATIONS[lang];
@@ -169,6 +294,9 @@ export default function Home() {
   const [rewardCodeInput, setRewardCodeInput] = useState('');
   const [visitPopup, setVisitPopup] = useState(null);
   const [visitCount, setVisitCount] = useState(null);
+
+  const [scratchData, setScratchData] = useState(null);
+  const [scratchCopied, setScratchCopied] = useState(false);
 
   const [currentOffer, setCurrentOffer] = useState(0);
 
@@ -214,6 +342,17 @@ export default function Home() {
     );
   }, []);
 
+  function fetchScratch(phone, name) {
+    fetch('https://maraya-backend.onrender.com/api/customers/scratch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, name }),
+    })
+      .then((res) => res.json())
+      .then((data) => setScratchData(data))
+      .catch(() => {});
+  }
+
   useEffect(() => {
     const saved = localStorage.getItem('maraya_customer');
     if (saved) {
@@ -232,6 +371,7 @@ export default function Home() {
             setVisitCount(remainder === 0 && visits > 0 ? 5 : remainder);
           })
           .catch(() => {});
+        fetchScratch(parsed.phone, parsed.name);
       }
     }
 
@@ -271,6 +411,15 @@ export default function Home() {
         setVisitCount(remainder === 0 ? 5 : remainder);
       })
       .catch(() => {});
+
+    fetchScratch(info.phone, info.name);
+  }
+
+  function copyScratchCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+      setScratchCopied(true);
+      setTimeout(() => setScratchCopied(false), 2000);
+    });
   }
 
   const cartItems = Object.values(cart);
@@ -540,6 +689,13 @@ export default function Home() {
             )}
           </p>
         </div>
+
+        {scratchData && (
+          <div className="max-w-3xl mx-auto px-5 pb-4">
+            <p className="font-bold text-sm mb-2">{t.scratchTitle}</p>
+            <ScratchCard result={scratchData.result} t={t} onCopy={copyScratchCode} copied={scratchCopied} />
+          </div>
+        )}
 
         <div className="max-w-3xl mx-auto px-5 pb-4">
           <div
