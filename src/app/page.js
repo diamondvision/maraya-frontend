@@ -64,6 +64,7 @@ export default function Home() {
   const [formCar, setFormCar] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
+  const [rewardCodeInput, setRewardCodeInput] = useState('');
   const [visitPopup, setVisitPopup] = useState(null); // { visitNumber, remaining }
   const [visitCount, setVisitCount] = useState(null);
 
@@ -256,6 +257,7 @@ export default function Home() {
             quantity: item.qty,
           })),
           offer_pair_ids: offerSelection.length === 2 ? offerSelection : null,
+          reward_code: rewardCodeInput.trim() || null,
         }),
       });
       const data = await res.json();
@@ -674,6 +676,12 @@ export default function Home() {
                   <span>الإجمالي</span>
                   <span className="text-[var(--accent-soft)]">{cartTotal} ريال</span>
                 </div>
+                <input
+                  value={rewardCodeInput}
+                  onChange={(e) => setRewardCodeInput(e.target.value)}
+                  placeholder="كود الخصم (إن وجد)"
+                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-2 outline-none focus:border-[var(--accent)] text-sm mb-3"
+                />
                 {locationStatus !== 'allowed' && (
                   <p className="text-xs text-red-500 text-center mb-2">
                     🚫 لازم تكون قريب من مراية كافيه عشان تقدر تأكد الطلب
