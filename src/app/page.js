@@ -65,6 +65,7 @@ export default function Home() {
 
   const [submitting, setSubmitting] = useState(false);
   const [visitPopup, setVisitPopup] = useState(null); // { visitNumber, remaining }
+  const [visitCount, setVisitCount] = useState(null);
 
   const [currentOffer, setCurrentOffer] = useState(0);
 
@@ -147,6 +148,7 @@ export default function Home() {
         const remainder = nextVisit % 5;
         const remaining = remainder === 0 ? 0 : 5 - remainder;
         setVisitPopup({ visitNumber: nextVisit, remaining });
+        setVisitCount(remainder === 0 ? 5 : remainder);
       })
       .catch(() => {});
   }
@@ -377,6 +379,9 @@ export default function Home() {
             أهلاً {customer.name}
             {customer.table ? ` — طاولة ${customer.table}` : ''}
             {customer.car ? ` — سيارة ${customer.car}` : ''}
+            {visitCount !== null && (
+              <span className="text-[var(--accent-soft)] font-medium"> — زيارتك {visitCount} من 5</span>
+            )}
           </p>
         </div>
 
