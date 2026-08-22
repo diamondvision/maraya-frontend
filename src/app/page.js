@@ -126,8 +126,8 @@ const OFFERS_CONFIG = [
 ];
 
 const DRINK_CATEGORY_NAMES = ['مشروبات ساخنة', 'مشروبات باردة'];
-const CAFE_LOCATION = { lat: 24.873128, lng: 46.617061 };
-const MAX_DISTANCE_METERS = 700;
+const CAFE_LOCATION = { lat: 24.876503937598724, lng: 46.60362170895495 };
+const MAX_DISTANCE_METERS = 500;
 
 function getDistanceMeters(lat1, lng1, lat2, lng2) {
   const R = 6371000;
