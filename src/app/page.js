@@ -160,6 +160,7 @@ export default function Home() {
 
   const [customer, setCustomer] = useState(null);
   const [locationStatus, setLocationStatus] = useState('checking');
+  const [debugCoords, setDebugCoords] = useState(null);
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formTable, setFormTable] = useState('');
@@ -207,9 +208,18 @@ export default function Home() {
           CAFE_LOCATION.lat,
           CAFE_LOCATION.lng
         );
+        setDebugCoords({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: Math.round(position.coords.accuracy),
+          distance: Math.round(distance),
+        });
         setLocationStatus(distance <= MAX_DISTANCE_METERS ? 'allowed' : 'out_of_range');
       },
-      () => setLocationStatus('denied'),
+      (err) => {
+        setDebugCoords({ error: err.message });
+        setLocationStatus('denied');
+      },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
@@ -578,6 +588,13 @@ export default function Home() {
                   ? t.locationDenied
                   : t.locationOutOfRange}
               </p>
+              {debugCoords && (
+                <p className="text-xs mt-2 text-red-400 break-all" dir="ltr">
+                  {debugCoords.error
+                    ? `DEBUG ERROR: ${debugCoords.error}`
+                    : `DEBUG: ${debugCoords.lat}, ${debugCoords.lng} | accuracy: ${debugCoords.accuracy}m | distance from cafe: ${debugCoords.distance}m`}
+                </p>
+              )}
             </div>
           </div>
         )}
