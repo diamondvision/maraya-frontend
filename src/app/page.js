@@ -17,7 +17,7 @@ const OFFERS_CONFIG = [
     image: 'https://i.imgur.com/ZF4TVwI.png',
     emoji: '🍰',
   },
-{
+  {
     matchName: 'آيس لاتيه',
     subtitle: 'انتعش مع مرايا',
     gradient: 'linear-gradient(135deg, #4facfe, #00c6ae)',
@@ -27,6 +27,20 @@ const OFFERS_CONFIG = [
 ];
 
 const DRINK_CATEGORY_NAMES = ['مشروبات ساخنة', 'مشروبات باردة'];
+const CAFE_LOCATION = { lat: 24.879475236237877, lng: 46.618220124176055 };
+const MAX_DISTANCE_METERS = 500;
+
+function getDistanceMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 function isRiyadhWeekend() {
   const riyadhNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Riyadh' }));
@@ -43,9 +57,11 @@ export default function Home() {
   const [justAdded, setJustAdded] = useState(null);
 
   const [customer, setCustomer] = useState(null);
+  const [locationStatus, setLocationStatus] = useState('checking'); // checking | allowed | denied | out_of_range
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formTable, setFormTable] = useState('');
+  const [formCar, setFormCar] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -62,6 +78,26 @@ export default function Home() {
       setCurrentOffer((prev) => (prev + 1) % OFFERS_CONFIG.length);
     }, 4000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationStatus('denied');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const distance = getDistanceMeters(
+          position.coords.latitude,
+          position.coords.longitude,
+          CAFE_LOCATION.lat,
+          CAFE_LOCATION.lng
+        );
+        setLocationStatus(distance <= MAX_DISTANCE_METERS ? 'allowed' : 'out_of_range');
+      },
+      () => setLocationStatus('denied'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   }, []);
 
   useEffect(() => {
@@ -97,6 +133,7 @@ export default function Home() {
       name: formName.trim(),
       phone: formPhone.trim(),
       table: formTable.trim(),
+      car: formCar.trim(),
       savedAt: Date.now(),
     };
     localStorage.setItem('maraya_customer', JSON.stringify(info));
@@ -200,6 +237,7 @@ export default function Home() {
           customer_name: customer.name,
           customer_phone: customer.phone,
           table_number: customer.table || null,
+          vehicle_number: customer.car || null,
           items: cartItems.map((item) => ({
             product_id: item.product.id,
             quantity: item.qty,
@@ -237,6 +275,57 @@ export default function Home() {
       }),
     [menu.products]
   );
+
+  if (locationStatus === 'checking') {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] px-5">
+        <div className="text-center">
+          <div className="text-5xl mb-3">📍</div>
+          <p className="font-bold">جاري التحقق من موقعك...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (locationStatus === 'denied') {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] px-5">
+        <div className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 text-center flex flex-col gap-3">
+          <div className="text-5xl">📍</div>
+          <h2 className="text-lg font-bold">محتاجين نعرف موقعك</h2>
+          <p className="text-[var(--text-muted)] text-sm">
+            التطبيق متاح فقط للطلب من داخل الكافيه أو بالقرب منه. من فضلك اسمح بالوصول لموقعك من إعدادات المتصفح ثم أعد المحاولة.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (locationStatus === 'out_of_range') {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] px-5">
+        <div className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 text-center flex flex-col gap-3">
+          <div className="text-5xl">🚫</div>
+          <h2 className="text-lg font-bold">أنت خارج نطاق الكافيه</h2>
+          <p className="text-[var(--text-muted)] text-sm">
+            الطلب متاح فقط لمن هم بالقرب من مراية كافيه. تأكد من وجودك في الموقع الصحيح وأعد المحاولة.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   if (!customer) {
     return (
@@ -284,6 +373,18 @@ export default function Home() {
             />
           </div>
 
+          <div>
+            <label className="text-sm text-[var(--text-muted)] mb-1 block">
+              رقم السيارة / اللوحة (اختياري)
+            </label>
+            <input
+              value={formCar}
+              onChange={(e) => setFormCar(e.target.value)}
+              className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-2 outline-none focus:border-[var(--accent)]"
+              placeholder="مثال: أ ب ج 1234"
+            />
+          </div>
+
           <button
             type="submit"
             className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2"
@@ -313,7 +414,9 @@ export default function Home() {
             مراية
           </h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">
-            أهلاً {customer.name} {customer.table ? `— طاولة ${customer.table}` : ''}
+            أهلاً {customer.name}
+            {customer.table ? ` — طاولة ${customer.table}` : ''}
+            {customer.car ? ` — سيارة ${customer.car}` : ''}
           </p>
         </div>
 
