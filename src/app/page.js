@@ -64,6 +64,7 @@ export default function Home() {
   const [formCar, setFormCar] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
+  const [visitPopup, setVisitPopup] = useState(null); // { visitNumber, remaining }
 
   const [currentOffer, setCurrentOffer] = useState(0);
 
@@ -138,6 +139,16 @@ export default function Home() {
     };
     localStorage.setItem('maraya_customer', JSON.stringify(info));
     setCustomer(info);
+
+    fetch(`https://maraya-backend.onrender.com/api/customers/visits?phone=${encodeURIComponent(info.phone)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const nextVisit = (data.visits || 0) + 1;
+        const remainder = nextVisit % 5;
+        const remaining = remainder === 0 ? 0 : 5 - remainder;
+        setVisitPopup({ visitNumber: nextVisit, remaining });
+      })
+      .catch(() => {});
   }
 
   const cartItems = Object.values(cart);
@@ -559,6 +570,33 @@ export default function Home() {
           عرض السلة
           <span>{cartTotal} ريال</span>
         </button>
+      )}
+
+      {visitPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-5 bg-black/60">
+          <div className="w-full max-w-sm bg-[var(--surface)] border border-[var(--accent)] rounded-2xl p-6 text-center flex flex-col gap-3">
+            <div className="text-5xl">☕</div>
+            <h2 className="text-lg font-bold">أهلاً بك في مراية!</h2>
+            <p className="text-[var(--accent-soft)] font-semibold">
+              هذه زيارتك رقم {visitPopup.visitNumber}
+            </p>
+            {visitPopup.remaining > 0 ? (
+              <p className="text-[var(--text-muted)] text-sm">
+                باقي لك {visitPopup.remaining} {visitPopup.remaining === 1 ? 'زيارة' : 'زيارات'} وتحصل على طلب مجاني! 🎉
+              </p>
+            ) : (
+              <p className="text-[var(--accent-soft)] text-sm font-medium">
+                🎉 مبروك! استحققت طلب مجاني — تفقد رسالة التهنئة بعد الدفع
+              </p>
+            )}
+            <button
+              onClick={() => setVisitPopup(null)}
+              className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2"
+            >
+              متابعة إلى المنيو
+            </button>
+          </div>
+        </div>
       )}
 
       {cartOpen && (
