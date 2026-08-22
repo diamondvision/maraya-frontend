@@ -224,6 +224,14 @@ export default function Home() {
         localStorage.removeItem('maraya_customer');
       } else {
         setCustomer(parsed);
+        fetch(`https://maraya-backend.onrender.com/api/customers/visits?phone=${encodeURIComponent(parsed.phone)}`)
+          .then((res) => res.json())
+          .then((data) => {
+            const visits = data.visits || 0;
+            const remainder = visits % 5;
+            setVisitCount(remainder === 0 && visits > 0 ? 5 : remainder);
+          })
+          .catch(() => {});
       }
     }
 
