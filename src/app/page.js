@@ -276,57 +276,6 @@ export default function Home() {
     [menu.products]
   );
 
-  if (locationStatus === 'checking') {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] px-5">
-        <div className="text-center">
-          <div className="text-5xl mb-3">📍</div>
-          <p className="font-bold">جاري التحقق من موقعك...</p>
-        </div>
-      </main>
-    );
-  }
-
-  if (locationStatus === 'denied') {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] px-5">
-        <div className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 text-center flex flex-col gap-3">
-          <div className="text-5xl">📍</div>
-          <h2 className="text-lg font-bold">محتاجين نعرف موقعك</h2>
-          <p className="text-[var(--text-muted)] text-sm">
-            التطبيق متاح فقط للطلب من داخل الكافيه أو بالقرب منه. من فضلك اسمح بالوصول لموقعك من إعدادات المتصفح ثم أعد المحاولة.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2"
-          >
-            إعادة المحاولة
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  if (locationStatus === 'out_of_range') {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] px-5">
-        <div className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 text-center flex flex-col gap-3">
-          <div className="text-5xl">🚫</div>
-          <h2 className="text-lg font-bold">أنت خارج نطاق الكافيه</h2>
-          <p className="text-[var(--text-muted)] text-sm">
-            الطلب متاح فقط لمن هم بالقرب من مراية كافيه. تأكد من وجودك في الموقع الصحيح وأعد المحاولة.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold mt-2"
-          >
-            إعادة المحاولة
-          </button>
-        </div>
-      </main>
-    );
-  }
-
   if (!customer) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] px-5">
@@ -422,7 +371,7 @@ export default function Home() {
 
         <div className="max-w-3xl mx-auto px-5 pb-4">
           <div
-            className="relative w-full h-52 rounded-2xl overflow-hidden transition-all duration-700"
+            className="relative w-full h-64 rounded-2xl overflow-hidden transition-all duration-700"
             style={
               activeOfferData.image
                 ? {
@@ -446,6 +395,20 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {locationStatus !== 'allowed' && (
+          <div className="max-w-3xl mx-auto px-5 pb-4">
+            <div className="rounded-2xl px-5 py-3 bg-red-500/10 border border-red-500/40">
+              <p className="text-sm font-medium text-red-500">
+                {locationStatus === 'checking'
+                  ? '📍 جاري التحقق من موقعك...'
+                  : locationStatus === 'denied'
+                  ? '📍 محتاجين إذن موقعك عشان تقدر تأكد الطلب. تصفح براحتك، وفعّل إذن الموقع لما تكون جاهز تطلب.'
+                  : '🚫 أنت خارج نطاق مراية كافيه حاليًا. تقدر تتصفح المنيو، لكن لازم تكون قريب من الكافيه عشان تأكد الطلب.'}
+              </p>
+            </div>
+          </div>
+        )}
 
         {weekendOfferActive && !offerMode && offerSelection.length < 2 && (
           <div className="max-w-3xl mx-auto px-5 pb-4">
@@ -668,9 +631,14 @@ export default function Home() {
                   <span>الإجمالي</span>
                   <span className="text-[var(--accent-soft)]">{cartTotal} ريال</span>
                 </div>
+                {locationStatus !== 'allowed' && (
+                  <p className="text-xs text-red-500 text-center mb-2">
+                    🚫 لازم تكون قريب من مراية كافيه عشان تقدر تأكد الطلب
+                  </p>
+                )}
                 <button
                   onClick={submitOrder}
-                  disabled={submitting}
+                  disabled={submitting || locationStatus !== 'allowed'}
                   className="w-full py-3 rounded-full bg-[var(--accent)] text-[#1c1815] font-bold disabled:opacity-50"
                 >
                   {submitting ? 'جاري الإرسال...' : 'تأكيد الطلب'}
